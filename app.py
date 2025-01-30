@@ -14,7 +14,7 @@ with st.sidebar:
     uploaded_file = st.file_uploader("Upload hasil grid search (CSV):", type="csv")
     uploaded_comparison_file = st.file_uploader("Upload hasil perbandingan model terbaik (Excel):", type="xlsx")
     detailed_file = st.file_uploader("Upload dataset model_comparison_detailed (Excel):", type="xlsx")
-    uploaded_forecast_file = st.file_uploader("Upload dataset forecast Januari-Maret 2025 (Excel):", type="xlsx")
+    uploaded_forecast_file = st.file_uploader("Upload dataset Forecast ID 1-15 (Excel):", type="xlsx")
 
 # Judul utama
 st.title("Perbandingan Model Forecast dalam Prediksi Penjualan Pelumas Wilayah Surabaya")
@@ -76,7 +76,7 @@ def display_visualization(df, key_prefix):
         st.warning("Data untuk ID tersebut tidak ditemukan.")
 
 # Tabs untuk mengatur tampilan halaman
-tab1, tab2, tab3, tab4 = st.tabs(["Grid Search", "Perbandingan Model", "Forecast 2025", "Visualisasi Data"])
+tab1, tab2, tab3, tab4 = st.tabs(["Grid Search", "Perbandingan Model", "Forecast 2025", "Forecast ID 1-15"])
 
 # Tab 1: Grid Search
 with tab1:

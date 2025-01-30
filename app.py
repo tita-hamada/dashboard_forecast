@@ -160,11 +160,44 @@ with tab3:
     else:
         st.warning("Silakan unggah file dataset forecast untuk melanjutkan.")
 
-# Tab 4: Visualisasi Data
+# Tab 4: Hasil Forecast ID 1-15
 with tab4:
-    st.subheader("Visualisasi Data")
-    if uploaded_comparison_file:
-        comparison_df = pd.read_excel(uploaded_comparison_file)
-        display_visualization(comparison_df, "visualization")
+    st.subheader("Hasil Forecast ID 1-15")
+    
+    if uploaded_forecast_file:
+        # Membaca file hasil forecast
+        forecast_data = pd.read_excel(uploaded_forecast_file)
+        
+        # Menampilkan tabel seluruh hasil forecast
+        st.write("Tabel Hasil Forecast:")
+        st.dataframe(forecast_data)
+        
+        # Menyaring data untuk ID 1-15
+        filtered_forecast_data = forecast_data[forecast_data['ID'].isin(range(1, 16))]
+        st.write("Tabel Hasil Forecast untuk ID 1-15:")
+        st.dataframe(filtered_forecast_data)
+        
+        # Menentukan model terbaik berdasarkan MAPE bulan Okt, Nov, dan Des
+        def get_best_model_for_id(data, id_value):
+            # Memilih data untuk ID tertentu
+            id_data = data[data['ID'] == id_value]
+            # Menentukan model terbaik berdasarkan MAPE untuk ketiga bulan
+            best_model = id_data.loc[id_data[['MAPE_Oct', 'MAPE_Nov', 'MAPE_Dec']].sum(axis=1).idxmin()]
+            return best_model
+        
+        # Mendapatkan hasil terbaik untuk setiap ID (1-15)
+        best_models = []
+        for id_value in range(1, 16):
+            best_model = get_best_model_for_id(filtered_forecast_data, id_value)
+            best_models.append(best_model)
+        
+        # Menggabungkan hasil terbaik menjadi dataframe
+        best_models_df = pd.DataFrame(best_models)
+        
+        # Menampilkan tabel model terbaik
+        st.write("Tabel Model Terbaik Berdasarkan MAPE untuk ID 1-15:")
+        st.dataframe(best_models_df[['ID', 'Model', 'Params', 'Forecast_Oct', 'Forecast_Nov', 'Forecast_Dec',
+                                      'Actual_Oct', 'Actual_Nov', 'Actual_Dec', 'MAPE_Oct', 'MAPE_Nov', 'MAPE_Dec',
+                                      'Accuracy_Oct', 'Accuracy_Nov', 'Accuracy_Dec']])
     else:
-        st.warning("Silakan unggah file perbandingan model untuk melihat visualisasi.")
+        st.warning("Silakan unggah file hasil forecast untuk melanjutkan.")

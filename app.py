@@ -169,13 +169,7 @@ with tab4:
         forecast_data = pd.read_excel(uploaded_forecast_file)
         
         # Menampilkan tabel seluruh hasil forecast
-        st.write("Tabel Hasil Forecast:")
         st.dataframe(forecast_data)
-        
-        # Menyaring data untuk ID 1-15
-        filtered_forecast_data = forecast_data[forecast_data['ID'].isin(range(1, 16))]
-        st.write("Tabel Hasil Forecast untuk ID 1-15:")
-        st.dataframe(filtered_forecast_data)
         
         # Menentukan model terbaik berdasarkan MAPE bulan Okt, Nov, dan Des
         def get_best_model_for_id(data, id_value):

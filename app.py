@@ -29,14 +29,14 @@ st.markdown("""
   - α = [0.1, 0.3, 0.5, 0.7, 0.9]
 - *Holt's Linear Trend*: 9 model 
   - Kombinasi α = [0.1, 0.5, 0.9] dan β = [0.1, 0.5, 0.9]
-- *Holt-Winters*: 9 model 
+- *Holt-Winters*: 27 model 
   - Kombinasi α = [0.1, 0.5, 0.9], β = [0.1, 0.5, 0.9], dan γ = [0.1, 0.5, 0.9]
 
 ### Total Model per Produk:
 - *SES*: 5 model
 - *Holt's Linear Trend*: 9 model
-- *Holt-Winters*: 9 model
-- *Total*: 23 model per produk
+- *Holt-Winters*: 27 model
+- *Total*: 41 model per produk
 """)
 
 st.markdown("""

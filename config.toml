@@ -1,0 +1,21 @@
+[server]
+enableCORS = false
+headless = true
+
+[theme]
+primaryColor = "#4CAF50"  # Sesuaikan warna utama (opsional)
+backgroundColor = "#FFFFFF"
+secondaryBackgroundColor = "#F0F2F6"
+textColor = "#262730"
+font = "sans serif"
+
+[browser]
+gatherUsageStats = false
+serverAddress = "0.0.0.0"
+serverPort = 8501
+browser.gatherUsageStats = false
+browser.serverPort = 8501
+browser.serverAddress = "0.0.0.0"
+
+[global]
+layout = "wide"  # Set mode menjadi wide untuk full layar

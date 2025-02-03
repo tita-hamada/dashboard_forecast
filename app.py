@@ -1,198 +1,90 @@
 import streamlit as st
 import pandas as pd
+import os
+import matplotlib.pyplot as plt
 import numpy as np
 import plotly.express as px
-import matplotlib.pyplot as plt
+# Atur layout menjadi wide
+st.set_page_config(layout="wide")
 
-# Atur layout menjadi "wide"
-st.set_page_config(layout="wide", page_title="Dashboard Forecast Pelumas Surabaya")
-
-# Sidebar untuk navigasi dan unggah file
-with st.sidebar:
-    st.header("  ")
-    st.markdown("### Unggah File")
-    uploaded_file = st.file_uploader("Upload hasil grid search (CSV):", type="csv")
-    uploaded_comparison_file = st.file_uploader("Upload hasil perbandingan model terbaik (Excel):", type="xlsx")
-    detailed_file = st.file_uploader("Upload dataset model_comparison_detailed (Excel):", type="xlsx")
-    uploaded_forecast_file = st.file_uploader("Upload dataset Forecast ID 1-15 (Excel):", type="xlsx")
-
-# Judul utama
+# Judul dashboard
 st.title("Perbandingan Model Forecast dalam Prediksi Penjualan Pelumas Wilayah Surabaya")
+
 st.write("""
-Dashboard ini bertujuan untuk membandingkan berbagai model **Exponential Smoothing** 
-dalam memprediksi penjualan pelumas untuk wilayah Surabaya berdasarkan nilai metrik error MAE dan RMSE.
+Dashboard ini bertujuan untuk membandingkan berbagai model *Exponential Smoothing* 
+dalam memprediksi penjualan pelumas untuk wilayah Surabaya berdasarkan nilai metrik error MAPE.
 """)
 
 st.markdown("""
 ### Total Forecast per Produk:
-- *SES (Simple Exponential Smoothing)*: 5 model 
+- SES (Simple Exponential Smoothing): 5 model 
   - α = [0.1, 0.3, 0.5, 0.7, 0.9]
-- *Holt's Linear Trend*: 9 model 
+- Holt's Linear Trend: 9 model 
   - Kombinasi α = [0.1, 0.5, 0.9] dan β = [0.1, 0.5, 0.9]
-- *Holt-Winters*: 27 model 
+- Holt-Winters: 27 model 
   - Kombinasi α = [0.1, 0.5, 0.9], β = [0.1, 0.5, 0.9], dan γ = [0.1, 0.5, 0.9]
 
 ### Total Model per Produk:
-- *SES*: 5 model
-- *Holt's Linear Trend*: 9 model
-- *Holt-Winters*: 27 model
-- *Total*: 41 model per produk
+- SES: 5 model
+- Holt's Linear Trend: 9 model
+- Holt-Winters: 27 model
+- Total: 41 model per produk
 """)
 
-st.markdown("""
-### Menu """)
+# Path folder tempat file disimpan (sesuaikan dengan direktori di VS Code)
+data_folder = "D:/Dashboard_Excel"  # Ganti sesuai struktur folder di VS Code
 
-# Fungsi untuk menentukan model terbaik berdasarkan metrik error
-def get_best_model(data, metric):
-    return data.loc[data.groupby('ID')[metric].idxmin()]
+# Tab navigasi
+tab1, tab2, tab3 = st.tabs(["Backtest", "Model Terbaik", "Forecast 2025"])
 
-# Fungsi untuk menghitung persentase model terbaik
-def calculate_model_percentage(data):
-    all_models = ["SES", "Holt", "Holt-Winters"]
-    model_counts = data["Model"].str.split("_").str[0].value_counts()
-    model_counts = model_counts.reindex(all_models, fill_value=0)
-    total = model_counts.sum()
-    percentages = (model_counts / total * 100).round(2)
-    return percentages
-
-# Fungsi untuk menampilkan visualisasi data
-def display_visualization(df, key_prefix):
-    selected_id = st.selectbox(
-        "Pilih ID untuk melihat detail prediksi:",
-        df["ID"].unique(),
-        key=f"{key_prefix}_selectbox"
-    )
-    id_data = df[df["ID"] == selected_id]
-    if not id_data.empty:
-        fig, ax = plt.subplots()
-        actual = id_data[['Actual Oct', 'Actual Nov', 'Actual Dec']].values.flatten()
-        forecast = id_data[['Forecast Oct', 'Forecast Nov', 'Forecast Dec']].values.flatten()
-        ax.plot(actual, label="Actual", marker="o")
-        ax.plot(forecast, label="Forecast", marker="x")
-        ax.set_title(f"Forecast vs Actual untuk ID: {selected_id}")
-        ax.legend()
-        st.pyplot(fig)
-    else:
-        st.warning("Data untuk ID tersebut tidak ditemukan.")
-
-# Tabs untuk mengatur tampilan halaman
-tab1, tab2, tab3, tab4 = st.tabs(["Grid Search", "Perbandingan Model", "Forecast 2025", "Forecast ID 1-15"])
-
-# Tab 1: Grid Search
+# Tab 1: Backtest
 with tab1:
-    st.subheader("Hasil Grid Search")
-    if uploaded_file:
-        results_df = pd.read_csv(uploaded_file)
-        st.dataframe(results_df)
-
-        metric_option = st.selectbox("Pilih metrik untuk menentukan model terbaik:", ["MAE", "RMSE"], key="grid_search_metric")
-        best_models = get_best_model(results_df, metric_option)
-
-        st.write(f"Model terbaik untuk setiap ID berdasarkan {metric_option}:")
-        st.dataframe(best_models)
-
-        st.markdown("### Persentase Hasil Pemilihan Metode Forecast")
-        model_percentages = calculate_model_percentage(best_models)
-        fig = px.pie(
-            values=model_percentages.values,
-            names=model_percentages.index,
-            title=f"Persentase Model Terbaik berdasarkan {metric_option}"
-        )
-        st.plotly_chart(fig)
+    st.subheader("Backtest - Evaluasi Performa Model")
+    st.markdown("Dataset ini berisi hasil Grid Search 41 model untuk setiap produk.")
+    file_path = os.path.join(data_folder, "model_comparison_mape.xlsx")
+    if os.path.exists(file_path):
+        df_backtest = pd.read_excel(file_path)
+        st.dataframe(df_backtest)
     else:
-        st.warning("Silakan unggah file hasil grid search untuk melanjutkan.")
+        st.error("File model_comparison_mape.xlsx tidak ditemukan!")
 
-# Tab 2: Perbandingan Model
+# Tab 2: Model Terbaik
 with tab2:
-    st.subheader("Perbandingan Model Terbaik")
-    if uploaded_comparison_file:
-        comparison_df = pd.read_excel(uploaded_comparison_file)
-        st.dataframe(comparison_df)
-
-        search_id_comparison = st.text_input(
-            "Cari berdasarkan ID (Perbandingan Model Terbaik):",
-            key="comparison_text_input"
-        )
-        if search_id_comparison:
-            filtered_data = comparison_df[comparison_df["ID"].astype(str) == search_id_comparison]
-            if not filtered_data.empty:
-                st.write(f"Detail untuk ID: {search_id_comparison}")
-                st.dataframe(filtered_data[[
-                    'ID', 'Best Model', 'Forecast Oct', 'Forecast Nov', 'Forecast Dec',
-                    'Actual Oct', 'Actual Nov', 'Actual Dec',
-                    'Diff Oct', 'Diff Nov', 'Diff Dec'
-                ]])
-            else:
-                st.warning("ID tidak ditemukan.")
+    st.subheader("Model Terbaik per Produk")
+    st.markdown("Dataset ini menunjukkan model terbaik untuk setiap produk berdasarkan nilai Average MAPE terkecil.")
+    file_path = os.path.join(data_folder, "best_model_per_product.xlsx")
+    if os.path.exists(file_path):
+        df_best_model = pd.read_excel(file_path)
+        st.dataframe(df_best_model)
     else:
-        st.warning("Silakan unggah file hasil perbandingan model untuk melanjutkan.")
+        st.error("File best_model_per_product.xlsx tidak ditemukan!")
+
+# Tambahkan pie chart Distribusi Kategori MAPE
+    st.subheader("Distribusi Kategori MAPE")
+
+# Gunakan st.columns untuk mengontrol layout
+    col1, col2, col3 = st.columns([1, 2, 1])  # Pie chart ada di tengah
+
+    with col2:  # Pie chart ada di kolom tengah agar tidak terlalu wide
+        categories = ["Inaccurate", "Reasonable", "Good", "Highly Accurate"]
+        values = [40.8, 29.2, 12.7, 17.3]
     
-    # Jika file Excel model_comparison_detailed diupload
-    if detailed_file is not None:
-        # Membaca file Excel
-        detailed_df = pd.read_excel(detailed_file)
-        
-        # Menampilkan tabel dataset
-        st.write("Tabel Model Comparison Detailed:")
-        st.dataframe(detailed_df)
-    else:
-        st.warning("Silakan unggah file dataset model_comparison_detailed untuk melihat detail.")
-
+        fig, ax = plt.subplots(figsize=(6, 6))  # Ukuran lebih proporsional
+        ax.pie(
+            values, labels=categories, autopct='%1.1f%%', startangle=140,
+            colors=["red", "orange", "yellow", "green"], textprops={'fontsize': 12}
+        )
+        ax.axis('equal')  # Equal aspect ratio ensures the pie chart is circular.
+    
+        st.pyplot(fig)
 
 # Tab 3: Forecast 2025
 with tab3:
-    st.subheader("Forecast 2025")
-    if uploaded_forecast_file:
-        forecast_data = pd.read_excel(uploaded_forecast_file)
-        st.dataframe(forecast_data)
-
-        search_id_forecast = st.text_input(
-            "Cari berdasarkan ID (Forecast Januari-Maret 2025):",
-            key="forecast_text_input"
-        )
-        if search_id_forecast:
-            search_results = forecast_data[forecast_data["ID"].astype(str) == search_id_forecast]
-            if not search_results.empty:
-                st.write(f"Hasil pencarian untuk ID: {search_id_forecast}")
-                st.dataframe(search_results)
-            else:
-                st.warning("ID tidak ditemukan.")
+    st.subheader("Forecast Penjualan Januari - Maret 2025")
+    st.markdown("Dataset ini berisi prediksi penjualan untuk Januari hingga Maret 2025 berdasarkan model terbaik.")
+    file_path = os.path.join(data_folder, "forecast_jan_mar_2025.xlsx")
+    if os.path.exists(file_path):
+        df_forecast = pd.read_excel(file_path)
+        st.dataframe(df_forecast)
     else:
-        st.warning("Silakan unggah file dataset forecast untuk melanjutkan.")
-
-# Tab 4: Hasil Forecast ID 1-15
-with tab4:
-    st.subheader("Hasil Forecast ID 1-15")
-    
-    if uploaded_forecast_file:
-        # Membaca file hasil forecast
-        forecast_data = pd.read_excel(uploaded_forecast_file)
-        
-        # Menyaring data untuk ID 1-15
-        filtered_forecast_data = forecast_data[forecast_data['ID'].isin(range(1, 16))]
-        st.dataframe(filtered_forecast_data)
-        
-        # Menentukan model terbaik berdasarkan MAPE bulan Okt, Nov, dan Des
-        def get_best_model_for_id(data, id_value):
-            # Memilih data untuk ID tertentu
-            id_data = data[data['ID'] == id_value]
-            # Menentukan model terbaik berdasarkan MAPE untuk ketiga bulan
-            best_model = id_data.loc[id_data[['MAPE_Oct', 'MAPE_Nov', 'MAPE_Dec']].sum(axis=1).idxmin()]
-            return best_model
-        
-        # Mendapatkan hasil terbaik untuk setiap ID (1-15)
-        best_models = []
-        for id_value in range(1, 16):
-            best_model = get_best_model_for_id(filtered_forecast_data, id_value)
-            best_models.append(best_model)
-        
-        # Menggabungkan hasil terbaik menjadi dataframe
-        best_models_df = pd.DataFrame(best_models)
-        
-        # Menampilkan tabel model terbaik
-        st.write("Tabel Model Terbaik Berdasarkan MAPE untuk ID 1-15:")
-        st.dataframe(best_models_df[['ID', 'Model', 'Params', 'Forecast_Oct', 'Forecast_Nov', 'Forecast_Dec',
-                                      'Actual_Oct', 'Actual_Nov', 'Actual_Dec', 'MAPE_Oct', 'MAPE_Nov', 'MAPE_Dec',
-                                      'Accuracy_Oct', 'Accuracy_Nov', 'Accuracy_Dec']])
-    else:
-        st.warning("Silakan unggah file hasil forecast untuk melanjutkan.")
+        st.error("File forecast_jan_mar_2025.xlsx tidak ditemukan!")
